@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridge Game Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        .upload-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .upload-section h2 {
+            margin-bottom: 20px;
+            color: #00d4ff;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,212,255,0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .card-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .card-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .key-moments {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .key-moments h3 {
+            color: #ff6b6b;
+            margin-bottom: 15px;
+        }
+        
+        .moment {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        .moment.minor {
+            border-left-color: #ffd93d;
+        }
+        
+        .moment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .moment-type {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+        
+        .moment-type.minor {
+            color: #ffd93d;
+        }
+        
+        .moment-imp {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+        
+        .report-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .report-section h3 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+        
+        .report-content {
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 20px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-size: 14px;
+        }
+        
+        .error {
+            background: rgba(255,0,0,0.1);
+            border: 1px solid rgba(255,0,0,0.3);
+            border-radius: 8px;
+            padding: 20px;
+            color: #ff6b6b;
+            display: none;
+        }
+        
+        .error.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🃏 Bridge Game Analyzer</h1>
+        <p class="subtitle">Powered by BEN Engine + Gemini AI</p>
+        
+        <div class="upload-section">
+            <h2>📄 Paste Your PBN</h2>
+            <textarea id="pbnInput" placeholder="Paste your PBN content here...
+
+Example:
+[Event &quot;Test Game&quot;]
+[Dealer &quot;S&quot;]
+[Vulnerable &quot;All&quot;]
+[Deal &quot;N:AJ87632.J96.753. K9.Q8542.T6.AJ74 QT4.A.KJ94.KQ986 5.KT73.AQ82.T532&quot;]
+[Contract &quot;4S&quot;]
+[Auction &quot;S&quot;]
+1N Pass 4H Pass 4S Pass Pass Pass
+[Play &quot;E&quot;]
+C2 D3 CA C6 ..."></textarea>
+            
+            <div class="buttons">
+                <button class="btn-primary" onclick="analyzeGame()">🔍 Analyze Game</button>
+                <button class="btn-secondary" onclick="loadSample()">📋 Load Sample</button>
+                <button class="btn-secondary" onclick="clearAll()">🗑️ Clear</button>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing game with BEN Engine...</p>
+            <p style="color: #888; font-size: 0.9em; margin-top: 10px;">This may take 30-60 seconds</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results">
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-value" id="mistakeCount">0</div>
+                    <div class="card-label">Mistakes Found</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="impCost">0.0</div>
+                    <div class="card-label">Total IMP Cost</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="contract">-</div>
+                    <div class="card-label">Contract</div>
+                </div>
+                <div class="card">
+                    <div class="card-value" id="result">-</div>
+                    <div class="card-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="key-moments" id="keyMoments">
+                <h3>⚠️ Key Moments</h3>
+                <div id="momentsList"></div>
+            </div>
+            
+            <div class="report-section">
+                <h3>📊 Detailed Analysis Report</h3>
+                <div class="report-content" id="reportContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Change this to your Railway URL
+        const API_URL = window.location.origin;
+        
+        const SAMPLE_PBN = `[Event "Test Game"]
+[Site "Online"]
+[Date "2024.12.26"]
+[Board "1"]
+[North "Player N"]
+[South "Player S"]
+[East "Player E"]
+[West "Player W"]
+[Dealer "S"]
+[Vulnerable "All"]
+[Deal "N:AJ87632.J96.753. K9.Q8542.T6.AJ74 QT4.A.KJ94.KQ986 5.KT73.AQ82.T532"]
+[Contract "4S"]
+[Declarer "N"]
+[Result "10"]
+[Auction "S"]
+1N Pass 4H Pass
+4S Pass Pass Pass
+[Play "E"]
+C2 D3 CA C6
+D6 DJ DQ D5
+DA D7 DT D4
+D8 H6 H2 D9
+SQ S5 S2 SK
+H4 HA H7 H9
+S4 C3 SA S9
+S3 C4 ST H3
+CK C5 HJ C7
+C8 CT S6 CJ
+S7 H8 C9 D2
+S8 H5 CQ HT
+SJ HQ DK HK`;
+        
+        function loadSample() {
+            document.getElementById('pbnInput').value = SAMPLE_PBN;
+        }
+        
+        function clearAll() {
+            document.getElementById('pbnInput').value = '';
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+        }
+        
+        async function analyzeGame() {
+            const pbn = document.getElementById('pbnInput').value;
+            
+            if (!pbn.trim()) {
+                showError('Please paste a PBN first!');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/analyze/pbn`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pbn: pbn })
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('loading').classList.remove('active');
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Analysis failed');
+                }
+            } catch (err) {
+                document.getElementById('loading').classList.remove('active');
+                showError('Failed to connect to API: ' + err.message);
+            }
+        }
+        
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = '❌ ' + message;
+            errorEl.classList.add('active');
+        }
+        
+        function displayResults(data) {
+            // Summary cards
+            document.getElementById('mistakeCount').textContent = data.total_mistakes || 0;
+            document.getElementById('impCost').textContent = (data.total_imp_cost || 0).toFixed(1);
+            document.getElementById('contract').textContent = data.board?.contract || '-';
+            document.getElementById('result').textContent = data.board?.result || '-';
+            
+            // Key moments
+            const momentsList = document.getElementById('momentsList');
+            momentsList.innerHTML = '';
+            
+            if (data.key_moments && data.key_moments.length > 0) {
+                data.key_moments.forEach((moment, i) => {
+                    const div = document.createElement('div');
+                    div.className = `moment ${moment.severity}`;
+                    
+                    if (moment.type === 'bidding') {
+                        div.innerHTML = `
+                            <div class="moment-header">
+                                <span class="moment-type ${moment.severity}">Bidding #${moment.position}</span>
+                            </div>
+                            <div>Bid: <strong>${moment.played}</strong> → Recommended: <strong>${moment.recommended}</strong></div>
+                        `;
+                    } else {
+                        div.innerHTML = `
+                            <div class="moment-header">
+                                <span class="moment-type ${moment.severity}">Trick ${moment.trick}</span>
+                                <span class="moment-imp">${moment.imp_cost > 0 ? '+' : ''}${moment.imp_cost.toFixed(1)} IMP</span>
+                            </div>
+                            <div>Played: <strong>${moment.played}</strong> → Recommended: <strong>${moment.recommended}</strong></div>
+                        `;
+                    }
+                    
+                    momentsList.appendChild(div);
+                });
+            } else {
+                momentsList.innerHTML = '<p style="color: #4ade80;">✅ No significant mistakes found! Well played!</p>';
+            }
+            
+            // Report
+            document.getElementById('reportContent').textContent = data.report || 'No report generated';
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+        }
+    </script>
+</body>
+</html>
